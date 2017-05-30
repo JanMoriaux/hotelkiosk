@@ -5,6 +5,39 @@
  * Date: 30/05/2017
  * Time: 11:30
  */
+// Loosely based on guide: https://premium.wpmudev.org/blog/how-to-build-your-own-wordpress-contact-form-and-why/
+$getCategoriesEndpoint = "http://10.3.51.8:8280/services/hotel.HTTPEndpoint/products/categories";
+$getOrdersEndpoint     = "http://10.3.51.8:8280/services/hotel.HTTPEndpoint/orders?category=";
+$processOrdersEndpoint = "http://10.3.51.8:8280/services/hotel.HTTPEndpoint/orders/process?orderId=";
+
+//response generation function
+$response = "";
+
+//function to generate response
+function my_contact_form_generate_response( $type, $message ) {
+
+	global $response;
+
+	if ( $type == "success" ) {
+		$response = "<div class='success'>{$message}</div>";
+	} else {
+		$response = "<div class='error'>{$message}</div>";
+	}
+
+}
+
+$toProcess = $_POST["toProcess"];
+if ( isset( $toProcess ) && is_array( $toProcess ) && ! empty( $toProcess ) ) {
+	foreach ( $toProcess as $orderId ) {
+		$resp = wp_remote_post( $processOrdersEndpoint . $orderId );
+		if ( is_wp_error( $resp ) ) {
+			my_contact_form_generate_response( "error", "Orders not processed" );
+		} else {
+			my_contact_form_generate_response( "success", "Orders processed" );
+		}
+	}
+}
+
 get_header(); ?>
 
     <div id="primary" class="site-content">
@@ -26,11 +59,11 @@ get_header(); ?>
 							<?php echo $response; ?>
                             <form action="<?php the_permalink(); ?>" method="post">
 								<?php
-								$categories   = json_decode( wp_remote_retrieve_body( wp_remote_get( 'http://10.3.51.8:8280/services/hotel.HTTPEndpoint/products/categories', array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->categories;
+								$categories   = json_decode( wp_remote_retrieve_body( wp_remote_get( $getCategoriesEndpoint, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->categories;
 								$sortedOrders = array();
 								if ( ! empty( $categories ) ) {
 									foreach ( $categories->category as $category ) {
-										$orders = json_decode( wp_remote_retrieve_body( wp_remote_get( 'http://10.3.51.8:8280/services/hotel.HTTPEndpoint/orders?category=' . $category->name, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->orders;
+										$orders = json_decode( wp_remote_retrieve_body( wp_remote_get( $getOrdersEndpoint . $category->name, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->orders;
 										if ( ! empty( $orders ) ) {
 											foreach ( $orders->order as $order ) {
 												if ( ! array_key_exists( $order->roomNumber, $sortedOrders ) || ! isset( $sortedOrders[ $order->roomNumber ] ) ) {
