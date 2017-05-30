@@ -20,8 +20,10 @@ function my_contact_form_generate_response( $type, $message ) {
 
 	if ( $type == "success" ) {
 		$response = "<div class='success'>{$message}</div>";
-	} else {
+	} else if ($type = "error") {
 		$response = "<div class='error'>{$message}</div>";
+	} else {
+		$response = "";
 	}
 
 }
@@ -56,23 +58,26 @@ get_header(); ?>
 					<?php the_content(); ?>
                     <p>
                         <div id="respond">
-							<?php echo $response; ?>
+							<?php
+								echo $response;
+								$response = "";
+							?>
                             <form action="<?php the_permalink(); ?>" method="post">
 								<?php
 								$categories   = json_decode( wp_remote_retrieve_body( wp_remote_get( $getCategoriesEndpoint, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->categories;
 								$sortedOrders = array();
-								if ( ! empty( $categories ) ) {
+								if ( isset($categories-> category ) && ! empty( $categories->category ) ) {
 									foreach ( $categories->category as $category ) {
 										$orders = json_decode( wp_remote_retrieve_body( wp_remote_get( $getOrdersEndpoint . $category->name, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->orders;
-										if ( ! empty( $orders ) ) {
+										if ( isset( $orders->order ) && ! empty( $orders->order ) ) {
 											foreach ( $orders->order as $order ) {
 												if ( ! array_key_exists( $order->roomNumber, $sortedOrders ) || ! isset( $sortedOrders[ $order->roomNumber ] ) ) {
 													$sortedOrders[ $order->roomNumber ] = array();
 												}
-												if ( ! array_key_exists( $category->name, $sortedOrders[ $order->roomNumber ] ) || ! isset( $sortedOrders[ $order->roomNumber ][ $category-name ] ) ) {
+												if ( ! array_key_exists( $category->name, $sortedOrders[ $order->roomNumber ] ) || ! isset( $sortedOrders[ $order->roomNumber ][ $category->name ] ) ) {
 													$sortedOrders[ $order->roomNumber ][ $category->name ] = array();
 												}
-												array_push( $sortedOrders[ $order->roomNumber ][ $category->name ], $order );
+												array_push($sortedOrders[ $order->roomNumber ][ $category->name ], $order);
 											}
 										}
 									}
@@ -84,7 +89,7 @@ get_header(); ?>
 											echo "<tr><th>Name</th><th>Created on</th><th>Created by</th><th>Processed</th></tr>";
 											foreach ( $orders as $order ) {
 												echo "<tr><td>" . ucfirst( $order->name ) . "</td>";
-												echo "<td>" . ucfirst( $order->createdOn ) . "</td>";
+												echo "<td>" . ucfirst(strftime("%A, %d %B at %Hu%M", strtotime($order->createdOn))) . "</td>";
 												echo "<td>" . ucfirst( $order->createdBy ) . "</td>";
 												echo "<td><input type='checkbox' name='toProcess[]' value='$order->id'></td></tr>";
 											}
@@ -108,3 +113,4 @@ get_header(); ?>
 
 <?php get_sidebar(); ?>
 <?php get_footer(); ?>
+
