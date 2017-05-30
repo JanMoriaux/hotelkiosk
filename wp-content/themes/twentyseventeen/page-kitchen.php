@@ -32,14 +32,14 @@ get_header(); ?>
 									foreach ( $categories->category as $category ) {
 										$orders = json_decode( wp_remote_retrieve_body( wp_remote_get( 'http://10.3.51.8:8280/services/hotel.HTTPEndpoint/orders?category=' . $category->name, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->orders;
 										if ( ! empty( $orders ) ) {
-											foreach ( $orders->product as $product ) {
-												if ( ! array_key_exists( $product->roomNumber, $sortedOrders ) || ! isset( $sortedOrders[ $product->roomNumber ] ) ) {
-													$sortedOrders[ $product->roomNumber ] = array();
+											foreach ( $orders->order as $order ) {
+												if ( ! array_key_exists( $order->roomNumber, $sortedOrders ) || ! isset( $sortedOrders[ $order->roomNumber ] ) ) {
+													$sortedOrders[ $order->roomNumber ] = array();
 												}
-												if ( ! array_key_exists( $category->name, $sortedOrders[ $product->roomNumber ] ) || ! isset( $sortedOrders[ $product->roomNumber ][ $category ] ) ) {
-													$sortedOrders[ $product->roomNumber ][ $category ] = array();
+												if ( ! array_key_exists( $category->name, $sortedOrders[ $order->roomNumber ] ) || ! isset( $sortedOrders[ $order->roomNumber ][ $category-name ] ) ) {
+													$sortedOrders[ $order->roomNumber ][ $category->name ] = array();
 												}
-												array_push( $sortedOrders[ $product->roomNumber ][ $category ], $product );
+												array_push( $sortedOrders[ $order->roomNumber ][ $category->name ], $order );
 											}
 										}
 									}
@@ -53,7 +53,7 @@ get_header(); ?>
 												echo "<tr><td>" . ucfirst( $order->name ) . "</td>";
 												echo "<td>" . ucfirst( $order->createdOn ) . "</td>";
 												echo "<td>" . ucfirst( $order->createdBy ) . "</td>";
-												echo "<td><input type='checkbox' checked='false' name='process' value='$order->id'></td></tr>";
+												echo "<td><input type='checkbox' name='toProcess[]' value='$order->id'></td></tr>";
 											}
 										}
 									}
