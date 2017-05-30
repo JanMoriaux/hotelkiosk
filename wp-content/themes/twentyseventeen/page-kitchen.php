@@ -31,8 +31,8 @@ get_header(); ?>
 								if ( ! empty( $categories ) ) {
 									foreach ( $categories->category as $category ) {
 										$orders = json_decode( wp_remote_retrieve_body( wp_remote_get( 'http://10.3.51.8:8280/services/hotel.HTTPEndpoint/orders?category=' . $category->name, array( 'headers' => array( 'Accept' => 'application/json' ) ) ) ), false )->orders;
-										if ( ! empty( $categoryItems ) ) {
-											foreach ( $categoryItems->product as $product ) {
+										if ( ! empty( $orders ) ) {
+											foreach ( $orders->product as $product ) {
 												if ( ! array_key_exists( $product->roomNumber, $sortedOrders ) || ! isset( $sortedOrders[ $product->roomNumber ] ) ) {
 													$sortedOrders[ $product->roomNumber ] = array();
 												}
